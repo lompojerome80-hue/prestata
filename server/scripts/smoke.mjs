@@ -259,6 +259,57 @@ if (!ready) {
     ok('Candidature sur offre fermée bloquée (400)', r.status === 400, `reçu ${r.status}`);
   }
 
+  // ==================== PROFIL PROFESSIONNEL (CV) ====================
+  const marieUser = marieToken ? (await api('/api/auth/me', { token: marieToken })).json?.user : null;
+
+  // 26. Mettre à jour le profil professionnel de Marie (expériences, formation, compétences)
+  r = await api('/api/profiles/me', {
+    method: 'PUT',
+    token: marieToken,
+    body: {
+      headline: 'Directrice de projets digitaux',
+      bio: 'Passionnée par le digital et le développement d\'entreprises locales.',
+      city: 'Cotonou',
+      sector: 'Services numériques',
+      website: 'https://exemple.bj',
+      experiences: [
+        { title: 'Directrice de projets', company: 'Agence Nova', city: 'Cotonou', startDate: '2020-01', current: true, description: 'Pilotage de projets web et mobile.' },
+        { title: 'Chef de projet', company: 'Studio Web', city: 'Cotonou', startDate: '2016-03', endDate: '2019-12', current: false, description: 'Suivi de bout en bout des projets clients.' },
+      ],
+      educations: [
+        { school: 'Université d\'Abomey-Calavi', degree: 'Master', field: 'Informatique de gestion', startYear: 2011, endYear: 2015 },
+      ],
+      skills: ['Gestion de projet', 'Marketing digital', 'Rédaction web'],
+    },
+  });
+  log('Mettre à jour profil professionnel', r.status);
+  const marieProfile = r.json?.profile;
+
+  // 27. Relire via /api/profiles/me
+  r = await api('/api/profiles/me', { token: marieToken });
+  log('Relire profil (me)', r.status, `(exp=${r.json?.profile?.experiences?.length}, skills=${r.json?.profile?.skills?.length})`);
+
+  // 28. Profil public visible pour les visiteurs anonymes
+  if (marieUser?.id) {
+    r = await api(`/api/profiles/${marieUser.id}`);
+    log('Profil public', r.status, `(headline=${r.json?.profile?.headline}, openOffers=${r.json?.profile?.openOffers})`);
+  }
+
+  // 29. Profil d'un autre utilisateur (Paul) sans lui avoir rien rempli → 200
+  const paulUser = (await api('/api/auth/me', { token: paulToken })).json?.user;
+  if (paulUser?.id) {
+    r = await api(`/api/profiles/${paulUser.id}`);
+    log('Profil public (autre user)', r.status, `(bio=${r.json?.profile?.bio ?? 'vide'})`);
+  }
+
+  // 30. cvPublic=false masque le profil aux anonymes, mais reste visible pour le propriétaire
+  await api('/api/profiles/me', { method: 'PUT', token: paulToken, body: { cvPublic: false, headline: 'Plombier senior' } });
+  r = await api(`/api/profiles/${paulUser.id}`);
+  ok('Profil privé masqué aux anonymes', r.status === 404, `reçu ${r.status}`);
+  r = await api(`/api/profiles/me`, { token: paulToken });
+  ok('Profil privé visible par le propriétaire', r.status === 200, `reçu ${r.status}`);
+  await api('/api/profiles/me', { method: 'PUT', token: paulToken, body: { cvPublic: true } });
+
   console.log('\n--- Fin du test ---');
   server.kill();
   process.exit(0);

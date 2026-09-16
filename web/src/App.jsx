@@ -22,6 +22,8 @@ import Jobs from './pages/Jobs.jsx';
 import JobDetail from './pages/JobDetail.jsx';
 import JobForm from './pages/JobForm.jsx';
 import Legal from './pages/Legal.jsx';
+import ProProfile from './pages/ProProfile.jsx';
+import ProEdit from './pages/ProEdit.jsx';
 
 const TITLES = {
   home: 'Prestata — Trouvez un artisan ou un freelance près de chez vous',
@@ -33,6 +35,8 @@ const TITLES = {
   login: 'Connexion — Prestata',
   signup: 'Inscription — Prestata',
   legal: 'Informations légales — Prestata',
+  profile: 'Profil professionnel — Prestata',
+  profileEdit: 'Modifier mon profil — Prestata',
 };
 
 function usePageTitle() {
@@ -44,6 +48,8 @@ function usePageTitle() {
     else if (p.startsWith('/emplois/nouvelle')) title = TITLES.jobNew;
     else if (p.match(/^\/emplois\/[^/]+\/modifier/)) title = TITLES.jobEdit;
     else if (p.startsWith('/emplois')) title = p === '/emplois' ? TITLES.jobs : TITLES.jobDetail;
+    else if (p.startsWith('/profil/modifier')) title = TITLES.profileEdit;
+    else if (p.startsWith('/profil')) title = TITLES.profile;
     else if (p.startsWith('/connexion')) title = TITLES.login;
     else if (p.startsWith('/inscription')) title = TITLES.signup;
     else if (p === '/mentions-legales' || p === '/conditions-utilisation' || p === '/confidentialite') title = TITLES.legal;
@@ -90,6 +96,8 @@ export default function App() {
           <Route path="/emplois/nouvelle" element={<RequireAuth><JobForm /></RequireAuth>} />
           <Route path="/emplois/:id/modifier" element={<RequireAuth><JobForm /></RequireAuth>} />
           <Route path="/emplois/:id" element={<JobDetail />} />
+          <Route path="/profil/modifier" element={<RequireAuth><ProEdit /></RequireAuth>} />
+          <Route path="/profil/:id" element={<ProProfile />} />
           <Route path="/mentions-legales" element={<Legal page="legal" />} />
           <Route path="/conditions-utilisation" element={<Legal page="terms" />} />
           <Route path="/confidentialite" element={<Legal page="privacy" />} />

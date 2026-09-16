@@ -490,4 +490,78 @@ input[type='checkbox'], input[type='radio'] { width: auto; }
   .notif { padding: 12px 0; }
   .topcat-name { font-size: 0.9rem; }
   .rate-picker { justify-content: space-between; }
+  .pro-head { flex-wrap: wrap; }
+  .pro-actions { flex-wrap: wrap; }
+  .pro-actions .btn { flex: 1; min-width: 45%; }
+  .exp-card .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ============= PROFIL PROFESSIONNEL (LinkedIn / CV) ============= */
+.pro-cover {
+  height: 130px;
+  background: linear-gradient(140deg, #0f172a 0%, #134e4a 45%, #0d9488 100%);
+  margin-bottom: -58px;
+}
+.pro-head {
+  position: relative; display: flex; gap: 18px; align-items: flex-end;
+}
+.pro-head .avatar { border: 4px solid #fff; border-radius: 50%; box-shadow: var(--shadow); background: #fff; }
+.pro-head h1 { font-size: 1.5rem; margin: 0 0 4px; }
+.pro-headline { font-size: 1.05rem; color: var(--ink); font-weight: 600; margin: 0 0 4px; }
+.pro-head-info { flex: 1; min-width: 0; padding-bottom: 10px; }
+.pro-actions { display: flex; gap: 10px; margin: 18px 0 6px; flex-wrap: wrap; }
+.pro-sections { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+.pro-bio { white-space: pre-wrap; color: #334155; }
+
+.pro-timeline { display: flex; flex-direction: column; }
+.pro-item { display: flex; gap: 14px; padding: 8px 0 14px; }
+.pro-item-dot {
+  width: 12px; height: 12px; border-radius: 50%; margin-top: 5px; flex: none;
+  background: var(--primary); box-shadow: 0 0 0 4px var(--primary-light);
+}
+.pro-item-body { flex: 1; min-width: 0; }
+.pro-company { color: var(--muted); font-size: 0.92rem; }
+.pro-desc { color: #334155; font-size: 0.9rem; white-space: pre-wrap; margin-top: 4px; }
+
+.pro-jobs { display: flex; flex-direction: column; gap: 8px; }
+.pro-job {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; color: var(--ink);
+}
+.pro-job:hover { border-color: var(--primary); opacity: 1; }
+
+.skills-editor { display: flex; gap: 10px; }
+.skills-editor input { flex: 1; }
+.chip-x {
+  background: none; border: none; cursor: pointer; margin-left: 6px; color: #b45309; font-weight: 800; padding: 0;
+}
+.pro-edit-list { display: flex; flex-direction: column; gap: 12px; margin: 12px 0; }
+.exp-card {
+  border: 1px solid var(--line); border-radius: 12px; padding: 14px;
+  background: #f8fafc; display: flex; flex-direction: column; gap: 10px;
+}
+.exp-card .link-btn { align-self: flex-start; color: var(--danger); font-weight: 600; text-decoration: none; }
+
+/* CV imprimable (cache à l'écran, visible à l'impression) */
+.cv-print { display: none; }
+@media print {
+  @page { margin: 12mm; }
+  body { background: #fff; }
+  .no-print, .navbar, .footer { display: none !important; }
+  .page { padding: 0; }
+  .cv-print { display: block; }
+  .cv-head { border-bottom: 3px solid #0d9488; padding-bottom: 10px; margin-bottom: 14px; }
+  .cv-head h1 { font-size: 1.8rem; margin: 0; color: #0f766e; }
+  .cv-headline { font-weight: 700; font-size: 1.05rem; }
+  .cv-contact { color: #334155; font-size: 0.9rem; display: flex; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
+  .cv-print section { margin: 12px 0; }
+  .cv-print h2 {
+    font-size: 1rem; text-transform: uppercase; letter-spacing: 0.04em; color: #0f766e;
+    border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin: 0 0 8px;
+  }
+  .cv-entry { margin: 6px 0; }
+  .cv-sub { color: #334155; }
+  .cv-period { font-size: 0.85rem; color: #64748b; }
+  .cv-print p { font-size: 0.92rem; }
+  .cv-print { break-inside: avoid; }
 }

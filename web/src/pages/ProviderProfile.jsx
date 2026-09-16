@@ -78,6 +78,7 @@ export default function ProviderProfile() {
             <Link to="/connexion" className="btn btn-outline">💬 Contacter</Link>
           </>
         )}
+        {p.userId ? <Link to={`/profil/${p.userId}`} className="btn btn-ghost">👤 Profil professionnel</Link> : null}
       </div>
 
       {/* Bio */}

@@ -94,6 +94,7 @@ export default function Dashboard() {
         <div className="section-head">
           <h2>Offres d'emploi</h2>
           <div className="quick-links">
+            <Link to="/profil/modifier" className="btn btn-ghost small">👤 Mon profil & CV</Link>
             <Link to="/emplois" className="btn btn-ghost small">Explorer</Link>
             <Link to="/emplois/nouvelle" className="btn btn-primary small">➕ Publier une offre</Link>
           </div>

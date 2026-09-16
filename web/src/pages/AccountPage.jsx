@@ -129,6 +129,7 @@ export default function AccountPage() {
       <section className="section-box">
         <h2>Liens rapides</h2>
         <div className="quick-links">
+          <Link to="/profil/modifier" className="btn btn-ghost">Profil professionnel & CV</Link>
           <Link to="/tableau-de-bord" className="btn btn-ghost">Tableau de bord</Link>
           <Link to="/devenir-prestataire" className="btn btn-ghost">Profil prestataire</Link>
           <Link to="/recherche" className="btn btn-ghost">Rechercher</Link>

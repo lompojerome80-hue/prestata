@@ -113,7 +113,9 @@ export default function JobDetail() {
           {job.category ? <span className="chip">🏷️ {job.category.name}</span> : null}
         </div>
         <p className="muted small" style={{ marginTop: 10 }}>
-          Publié le {fmtDate(job.createdAt)} • {job.applicantCount} candidature{job.applicantCount > 1 ? 's' : ''}
+          Publié le {fmtDate(job.createdAt)}
+          {job.author?.id ? <> par <Link to={`/profil/${job.author.id}`}><strong>{job.author.fullName}</strong></Link></> : null}
+          {' '}• {job.applicantCount} candidature{job.applicantCount > 1 ? 's' : ''}
           {job.deadline ? (expired ? ' • Candidatures fermées' : ` • Postulez avant le ${fmtDate(job.deadline)}`) : ''}
         </p>
       </div>
@@ -142,7 +144,9 @@ export default function JobDetail() {
                   <div className="app-card-head">
                     <Avatar url={null} name={a.applicant?.fullName} size={40} />
                     <div className="app-card-info">
-                      <strong>{a.applicant?.fullName}</strong>
+                      {a.applicant?.id ? (
+                        <Link to={`/profil/${a.applicant.id}`}><strong>{a.applicant?.fullName}</strong></Link>
+                      ) : <strong>{a.applicant?.fullName}</strong>}
                       <div className="muted small">{a.applicant?.phone}</div>
                     </div>
                     <StatusPill status={a.status} map={JOB_APPLICATION_STATUS} />

@@ -31,6 +31,7 @@ export default function Navbar() {
             <>
               <NavLink to="/tableau-de-bord" className={cls} onClick={() => setOpen(false)}>Tableau de bord</NavLink>
               <NavLink to="/messagerie" className={cls} onClick={() => setOpen(false)}>Messagerie</NavLink>
+              <NavLink to="/profil/modifier" className={cls} onClick={() => setOpen(false)}>Mon profil</NavLink>
             </>
           ) : null}
           {user?.isAdmin ? (
@@ -44,7 +45,7 @@ export default function Navbar() {
               <button type="button" className="role-toggle" onClick={switchRole} title="Basculer de vue">
                 {roleMode === 'CLIENT' ? '👷 Prestataire' : '🙋 Client'}
               </button>
-              <Link to="/mon-compte" className="avatar-btn" title={user.fullName}>
+              <Link to={`/profil/${user?.id}`} className="avatar-btn" title={user.fullName}>
                 {user.fullName.slice(0, 1).toUpperCase()}
               </Link>
               <button type="button" className="logout-btn" onClick={() => { logout(); navigate('/'); }} title="Se déconnecter">
