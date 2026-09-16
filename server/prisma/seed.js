@@ -41,8 +41,8 @@ async function seedCategories() {
   console.log(`✅ ${count} catégories prêtes`);
 }
 
-// Comptes de démo — UNIQUEMENT en développement (SEED_DEMO_USERS !== 'false').
-// En production définir SEED_DEMO_USERS=false ; l'admin est créé via ADMIN_PHONE/ADMIN_PASSWORD.
+// Comptes de démo — JAMALS en production (NODE_ENV=production) ; sinon si SEED_DEMO_USERS !== 'false'.
+// L'admin de production est créé via ADMIN_PHONE/ADMIN_PASSWORD.
 async function seedDemoUsers() {
   const pwd = await bcrypt.hash('123456', 10);
 
@@ -176,10 +176,10 @@ async function seedDemoUsers() {
 async function main() {
   console.log('⏳ Seed en cours…');
   await seedCategories();
-  if (process.env.SEED_DEMO_USERS !== 'false') {
+  if (process.env.NODE_ENV !== 'production' && process.env.SEED_DEMO_USERS !== 'false') {
     await seedDemoUsers();
   } else {
-    console.log('ℹ️  Comptes de démo désactivés (SEED_DEMO_USERS=false)');
+    console.log('ℹ️  Comptes de démo désactivés (production ou SEED_DEMO_USERS=false)');
   }
   console.log('✅ Seed terminé');
 }
