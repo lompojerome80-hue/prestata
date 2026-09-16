@@ -1,0 +1,256 @@
+// Schéma de PRODUCTION (PostgreSQL — ex: Neon gratuit).
+// Ne pas utiliser en dev local : `schema.prisma` (SQLite) reste la référence de dev.
+// Utiliser via les scripts dédiés : npm run db:push:pg / db:generate:pg
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================== COMPTES ==============================
+
+model User {
+  id            String    @id @default(cuid())
+  fullName      String
+  phone         String    @unique
+  passwordHash  String
+  isAdmin       Boolean   @default(false)
+  phoneVerified Boolean   @default(false)
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  providerProfile  ProviderProfile?
+  memberConversations ConversationParticipant[]
+  messagesSent      Message[]            @relation("Sender")
+  requestsCreated   Request[]            @relation("ClientRequests")
+  prestationsClient Prestation[]         @relation("PrestationClient")
+  reviewsAuthored   Review[]             @relation("ReviewAuthor")
+  notifications     Notification[]
+}
+
+// Profil prestataire : créé lorsque l'utilisateur active le mode "prestataire".
+// Doit être validé par l'admin avant publication (status = APPROVED).
+model ProviderProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  headline     String   // ex: "Plombier expérimenté à Douala"
+  bio          String
+  city         String?
+  neighborhood String?
+  remoteOnly   Boolean  @default(false) // "à distance" pour les prestations digitales
+  rate         Int?     // tarif indicatif en FCFA
+  rateUnit     String   @default("SERVICE") // HEURE | JOUR | FORFAIT | MOT | PAGE | SESSION | SERVICE
+  avatarUrl    String?
+  status       String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  rejectionReason String?
+  verifiedBadge  Boolean @default(false) // numéro de téléphone confirmé
+  ratingAvg    Float    @default(0)
+  ratingCount  Int      @default(0)
+  viewCount    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  categories  ProviderCategory[]
+  portfolio   PortfolioItem[]
+  requests    Request[]
+  prestations Prestation[] @relation("ProviderPrestations")
+  reviews     Review[]     @relation("ProviderReviews")
+}
+
+model ProviderCategory {
+  id         String   @id @default(cuid())
+  providerId String
+  provider   ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([providerId, categoryId])
+}
+
+model PortfolioItem {
+  id         String   @id @default(cuid())
+  providerId String
+  provider   ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  type       String   @default("IMAGE") // IMAGE | LINK
+  url        String
+  caption    String?
+  createdAt  DateTime @default(now())
+}
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  slug        String  @unique
+  kind        String  @default("DOMICILE") // DOMICILE (artisans) | DIGITAL (freelances) | BOTH
+  icon        String? // nom d'icone utilisé par le front
+  sortOrder   Int     @default(0)
+  requestCount Int    @default(0) // nb de demandes, pour le back-office
+  providers   ProviderCategory[]
+  requests    Request[]
+}
+
+// ============================== MISE EN RELATION ==============================
+
+model Request {
+  id            String   @id @default(cuid())
+  reference     String   @unique
+  clientId      String
+  client        User     @relation("ClientRequests", fields: [clientId], references: [id])
+  providerId    String
+  provider      ProviderProfile @relation(fields: [providerId], references: [id])
+  categoryId    String?
+  category      Category? @relation(fields: [categoryId], references: [id])
+  kind          String   @default("ARTISAN") // ARTISAN | FREELANCE
+  title         String
+  description   String
+  budget        Int?     // budget indicatif (freelance)
+  photoUrl      String?  // photo optionnelle (ex: fuite d'eau)
+  urgency       String?  // TODAY | THIS_WEEK
+  deliveryCity  String?
+  status        String   @default("NEW") // NEW | QUOTE_SENT | ACCEPTED | IN_PROGRESS | COMPLETED | PAID | REVIEWED | CANCELLED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  quotes      Quote[]
+  conversation Conversation?
+  prestation  Prestation?
+  events      RequestEvent[]
+}
+
+model RequestEvent {
+  id        String   @id @default(cuid())
+  requestId String
+  request   Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  type      String
+  payload   String?
+  createdAt DateTime @default(now())
+}
+
+model Quote {
+  id            String   @id @default(cuid())
+  requestId     String
+  request       Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  amount        Int
+  description   String?
+  delayDays     Int?
+  status        String   @default("SENT") // SENT | ACCEPTED | REJECTED
+  createdAt     DateTime @default(now())
+  acceptedAt    DateTime?
+}
+
+// ============================== MESSAGERIE ==============================
+
+model Conversation {
+  id           String   @id @default(cuid())
+  requestId    String?  @unique
+  request      Request? @relation(fields: [requestId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  lastReadAt     DateTime?
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation("Sender", fields: [senderId], references: [id])
+  body           String
+  createdAt      DateTime     @default(now())
+}
+
+// ============================== PRESTATION & PAIEMENT ==============================
+
+// Une prestation = un devis accepté par le client. Paiement direct (pas d'escrow en V1).
+model Prestation {
+  id         String   @id @default(cuid())
+  requestId  String   @unique
+  request    Request  @relation(fields: [requestId], references: [id])
+  providerId String
+  provider   ProviderProfile @relation("ProviderPrestations", fields: [providerId], references: [id])
+  clientId   String
+  client     User     @relation("PrestationClient", fields: [clientId], references: [id])
+  amount     Int
+  currency   String   @default("XOF")
+  status     String   @default("IN_PROGRESS") // IN_PROGRESS | COMPLETED | PAID | REVIEWED
+  completedAt DateTime?
+  paidAt     DateTime?
+  reviewedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  payment Payment?
+  review  Review?
+}
+
+// Paiement direct (Orange Money / Moov Money). Aucun escrow.
+model Payment {
+  id            String   @id @default(cuid())
+  reference     String   @unique
+  prestationId  String   @unique
+  prestation    Prestation @relation(fields: [prestationId], references: [id])
+  provider      String   @default("ORANGE_MONEY") // ORANGE_MONEY | MOOV_MONEY
+  providerRef   String
+  amount        Int
+  currency      String   @default("XOF")
+  status        String   @default("INITIATED") // INITIATED | SUCCESSFUL | FAILED
+  payerPhone    String
+  payeePhone    String
+  paidAt        DateTime?
+  failureReason String?
+  createdAt     DateTime @default(now())
+  history       PaymentHistory[]
+}
+
+model PaymentHistory {
+  id        String  @id @default(cuid())
+  paymentId String
+  payment   Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  status    String
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+// ============================== CONFIANCE ==============================
+
+model Review {
+  id            String   @id @default(cuid())
+  prestationId  String   @unique
+  prestation    Prestation @relation(fields: [prestationId], references: [id])
+  authorId      String
+  author        User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  providerId    String
+  provider      ProviderProfile @relation("ProviderReviews", fields: [providerId], references: [id])
+  rating        Int      // 1..5
+  comment       String?
+  createdAt     DateTime @default(now())
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String    @default("INFO") // REQUEST | QUOTE | MESSAGE | PAYMENT | REVIEW | PROFILE
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+}

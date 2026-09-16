@@ -1,0 +1,182 @@
+import { spawn } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const PORT = 4010;
+const BASE = `http://localhost:${PORT}`;
+const api = async (path, { method = 'GET', token, body } = {}) => {
+  const res = await fetch(`${BASE}${path}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let json = null;
+  try { json = await res.json(); } catch { /* ignore */ }
+  return { status: res.status, json };
+};
+
+const log = (label, status, extra = '') =>
+  console.log(`${status === 200 || status === 201 ? '✅' : '❌'} ${label} → ${status} ${extra}`);
+
+// Démarre le serveur sur un port dédié
+const server = spawn('node', ['src/index.js'], {
+  cwd: path.join(__dirname, '..'),
+  env: { ...process.env, PORT: String(PORT) },
+  stdio: ['ignore', 'pipe', 'pipe'],
+});
+let logs = '';
+server.stdout.on('data', (d) => (logs += d.toString()));
+server.stderr.on('data', (d) => (logs += d.toString()));
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Attend que le serveur soit prêt
+let ready = false;
+for (let i = 0; i < 30; i++) {
+  await sleep(400);
+  try {
+    const res = await fetch(`${BASE}/api/health`);
+    if (res.ok) { ready = true; break; }
+  } catch { /* not yet */ }
+}
+if (!ready) {
+  console.error('Serveur non démarré:\n', logs);
+  server.kill();
+  process.exit(1);
+}
+
+(async () => {
+  // 1. Login admin
+  let r = await api('/api/auth/login', { method: 'POST', body: { phone: '+22991000001', password: '123456' } });
+  log('Login admin', r.status);
+  const adminToken = r.json?.token;
+
+  // 2. Liste des catégories
+  r = await api('/api/categories');
+  log('Catégories', r.status, `(${r.json?.categories?.length} éléments)`);
+
+  // 3. Recherche (plombier à Cotonou)
+  r = await api('/api/search?category=plomberie&city=Cotonou');
+  log('Recherche plombier Cotonou', r.status, `(${r.json?.total} résultats)`);
+
+  // 4. Rejet / approbation pending -> via admin
+  r = await api('/api/admin/providers/pending', { token: adminToken });
+  log('Admin: profils pending', r.status, `(${r.json?.providers?.length})`);
+
+  // 5. Stats admin
+  r = await api('/api/admin/stats', { token: adminToken });
+  log('Admin: stats', r.status, `(pending=${r.json?.pendingCount})`);
+
+  // 6. Fiche publique d'un prestataire APPROVED (Paul = plombier)
+  const search = await api('/api/search?category=plomberie');
+  const paulProvider = search.json?.providers?.[0];
+  if (paulProvider) {
+    r = await api(`/api/providers/${paulProvider.id}`);
+    log('Fiche prestataire publié', r.status);
+    if (r.json?.provider?.status === 'NOT_PUBLISHED') log('  (erreur de serial)','-');
+  }
+
+  // 7. Login client Marie (a un profil PENDING "à elle" ? non, Marie est client)
+  r = await api('/api/auth/login', { method: 'POST', body: { phone: '+22991000002', password: '123456' } });
+  log('Login Marie (client)', r.status);
+  const marieToken = r.json?.token;
+
+  // 8. Créer une demande (plombier)
+  if (paulProvider) {
+    r = await api('/api/requests', {
+      method: 'POST',
+      token: marieToken,
+      body: {
+        providerId: paulProvider.id,
+        title: 'Fuite d\'eau sous l\'évier',
+        description: 'J\'ai une fuite d\'eau sous l\'évier de la cuisine qui s\'aggrave.',
+        kind: 'ARTISAN',
+        urgency: 'TODAY',
+        city: 'Cotonou',
+      },
+    });
+    log('Créer demande', r.status);
+
+    // 9. Le prestataire envoie un devis
+    const paulLogin = await api('/api/auth/login', { method: 'POST', body: { phone: '+22991000003', password: '123456' } });
+    const paulToken = paulLogin.json?.token;
+
+    const requestId = r.json?.request?.id;
+    if (requestId) {
+      r = await api(`/api/requests/${requestId}/quotes`, {
+        method: 'POST',
+        token: paulToken,
+        body: { amount: 12000, description: 'Remplacement du joint', delayDays: 1 },
+      });
+      log('Envoyer devis', r.status);
+
+      // 10. Le client accepte le devis → prestation créée
+      const quoteId = r.json?.quote?.id;
+      if (quoteId) {
+        r = await api(`/api/quotes/${quoteId}/accept`, { method: 'POST', token: marieToken });
+        log('Accepter devis → prestation', r.status, r.json?.prestation ? `(id=${r.json?.prestation?.id})` : '');
+
+        const prestationId = r.json?.prestation?.id;
+
+        // 11. Prestataire marque la prestation terminée
+        r = await api(`/api/prestations/${prestationId}/complete`, { method: 'POST', token: paulToken });
+        log('Prestataire termine', r.status);
+
+        // 12. Client initie le paiement (sandbox)
+        r = await api(`/api/prestations/${prestationId}/pay`, {
+          method: 'POST',
+          token: marieToken,
+          body: { provider: 'ORANGE_MONEY', phone: '+22991000002' },
+        });
+        log('Initier paiement', r.status, r.json?.sandbox ? `(sandboxOtp=${r.json?.sandboxOtp})` : '');
+
+        const paymentId = r.json?.payment?.id;
+        // 13. Confirmer paiement en sandbox
+        if (paymentId) {
+          r = await api(`/api/payments/${paymentId}/confirm`, {
+            method: 'POST',
+            token: marieToken,
+            body: { otp: r.json?.sandboxOtp || '000000' },
+          });
+          log('Confirmer paiement', r.status, `(status=${r.json?.payment?.status})`);
+
+          // 14. Client note la prestation
+          r = await api(`/api/prestations/${prestationId}/review`, {
+            method: 'POST',
+            token: marieToken,
+            body: { rating: 5, comment: 'Excellent travail, rapide et propre !' },
+          });
+          log('Noter la prestation', r.status);
+        }
+
+        // 15. Vérifier la règle de confiance : nouvelle demande bloquée si pas encore notée ?
+        // (déjà notée ici, donc doit passer)
+        r = await api('/api/requests', {
+          method: 'POST',
+          token: marieToken,
+          body: {
+            providerId: paulProvider.id,
+            title: 'Installer un mitigeur',
+            description: 'Besoin d\'installer un nouveau mitigeur de douche.',
+            kind: 'ARTISAN',
+            city: 'Cotonou',
+          },
+        });
+        log('Nouvelle demande après avis', r.status);
+      }
+    }
+  }
+
+  console.log('\n--- Fin du test ---');
+  server.kill();
+  process.exit(0);
+})().catch((e) => {
+  console.error('Erreur smoke:', e);
+  server.kill();
+  process.exit(1);
+});

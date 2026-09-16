@@ -1,0 +1,25 @@
+{
+  "name": "prestata",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plateforme de mise en relation Clients <-> Prestataires (artisans & freelances)",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "db:push": "npm --workspace server run db:push",
+    "db:push:pg": "npm --workspace server run db:push:pg",
+    "db:generate:pg": "npm --workspace server run db:generate:pg",
+    "db:seed": "npm --workspace server run seed",
+    "dev:server": "npm --workspace server run dev",
+    "dev:web": "npm --workspace web run dev",
+    "dev": "concurrently -n API,WEB -c cyan,magenta \"npm run dev:server\" \"npm run dev:web\"",
+    "build": "npm --workspace web run build",
+    "start": "npm --workspace server run start",
+    "smoke": "npm --workspace server run smoke"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  }
+}

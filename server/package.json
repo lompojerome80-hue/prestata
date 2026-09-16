@@ -1,0 +1,29 @@
+{
+  "name": "prestata-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate",
+    "db:push:pg": "prisma db push --schema prisma/schema.postgres.prisma",
+    "db:generate:pg": "prisma generate --schema prisma/schema.postgres.prisma",
+    "seed": "node prisma/seed.js",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.3"
+  }
+}
