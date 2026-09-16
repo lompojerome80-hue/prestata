@@ -172,6 +172,93 @@ if (!ready) {
     }
   }
 
+  // ==================== BOURSE D'EMPLOI ====================
+  const ok = (label, isOk, extra = '') =>
+    console.log(`${isOk ? '✅' : '❌'} ${label} → ${extra}`);
+
+  const cats = await api('/api/categories');
+  const paulLogin = await api('/api/auth/login', { method: 'POST', body: { phone: '+22991000003', password: '123456' } });
+  const paulToken = paulLogin.json?.token;
+
+  // 16. Marie (client vérifié) publie une offre d'emploi
+  r = await api('/api/jobs', {
+    method: 'POST',
+    token: marieToken,
+    body: {
+      title: 'Développeur Web front-end',
+      company: 'Agence Nova',
+      description: 'Nous recherchons un développeur front-end pour un site vitrine et une boutique en ligne.',
+      contractType: 'FREELANCE',
+      salary: '250 000 FCFA / projet',
+      city: 'Cotonou',
+      remote: true,
+      categoryId: cats.json?.categories?.[0]?.id,
+    },
+  });
+  log('Publier offre d’emploi', r.status);
+  const jobId = r.json?.job?.id;
+
+  if (jobId) {
+    // 17. Liste publique des offres
+    r = await api('/api/jobs');
+    log('Liste des offres', r.status, `(${r.json?.jobs?.length} offres)`);
+
+    // 18. Détail (public, pas encore appliqué)
+    r = await api(`/api/jobs/${jobId}`);
+    log('Détail offre', r.status, `(applied=${r.json?.job?.applied})`);
+
+    // 19. Paul (prestataire) postule
+    const paulApply = await api(`/api/jobs/${jobId}/apply`, {
+      method: 'POST',
+      token: paulToken,
+      body: { message: 'Bonjour, développeur front-end avec 4 ans d\'expérience, je suis intéressé par votre offre.', contact: '+22991000003 (WhatsApp)' },
+    });
+    log('Postuler à l’offre', paulApply.status);
+    const appId = paulApply.json?.application?.id;
+
+    // 20. Double candidature → 409
+    r = await api(`/api/jobs/${jobId}/apply`, {
+      method: 'POST',
+      token: paulToken,
+      body: { message: 'Je me permets de re-postuler.' },
+    });
+    ok('Double candidature bloquée (409)', r.status === 409, `reçu ${r.status}`);
+
+    // 21. L'auteur voit les candidatures (canManage)
+    if (appId) {
+      r = await api(`/api/jobs/${jobId}`, { token: marieToken });
+      log('Auteur: candidatures visibles', r.status, `(${r.json?.job?.applications?.length})`);
+
+      // 22. L'auteur accepte la candidature
+      r = await api(`/api/jobs/${jobId}/applications/${appId}/respond`, {
+        method: 'POST',
+        token: marieToken,
+        body: { decision: 'ACCEPTED' },
+      });
+      log('Accepter candidature', r.status, `(status=${r.json?.application?.status})`);
+    }
+
+    // 23. Candidatures de Paul
+    r = await api('/api/jobs/applications/mine', { token: paulToken });
+    log('Mes candidatures', r.status, `(${r.json?.applications?.length})`);
+
+    // 24. Clôturer l'offre
+    r = await api(`/api/jobs/${jobId}`, {
+      method: 'PATCH',
+      token: marieToken,
+      body: { status: 'CLOSED' },
+    });
+    log('Clôturer l’offre', r.status, `(status=${r.json?.job?.status})`);
+
+    // 25. Impossible d'apply à une offre fermée (ou de postuler à sa propre offre) → 400
+    r = await api(`/api/jobs/${jobId}/apply`, {
+      method: 'POST',
+      token: marieToken,
+      body: { message: 'Test sur offre fermée.' },
+    });
+    ok('Candidature sur offre fermée bloquée (400)', r.status === 400, `reçu ${r.status}`);
+  }
+
   console.log('\n--- Fin du test ---');
   server.kill();
   process.exit(0);

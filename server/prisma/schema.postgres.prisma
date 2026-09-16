@@ -30,6 +30,8 @@ model User {
   prestationsClient Prestation[]         @relation("PrestationClient")
   reviewsAuthored   Review[]             @relation("ReviewAuthor")
   notifications     Notification[]
+  jobOffers         JobOffer[]           @relation("JobAuthor")
+  jobApplications   JobApplication[]     @relation("JobApplicant")
 }
 
 // Profil prestataire : créé lorsque l'utilisateur active le mode "prestataire".
@@ -92,6 +94,7 @@ model Category {
   requestCount Int    @default(0) // nb de demandes, pour le back-office
   providers   ProviderCategory[]
   requests    Request[]
+  jobOffers   JobOffer[]
 }
 
 // ============================== MISE EN RELATION ==============================
@@ -253,4 +256,45 @@ model Notification {
   type      String    @default("INFO") // REQUEST | QUOTE | MESSAGE | PAYMENT | REVIEW | PROFILE
   readAt    DateTime?
   createdAt DateTime  @default(now())
+}
+
+// ============================== OFFRE D'EMPLOI ==============================
+
+// Une offre publiée par un utilisateur vérifié ; les candidats postulent avec un message.
+model JobOffer {
+  id           String    @id @default(cuid())
+  reference    String    @unique
+  authorId     String
+  author       User      @relation("JobAuthor", fields: [authorId], references: [id])
+  title        String
+  company      String
+  description  String
+  contractType String    @default("CDI") // CDI | CDD | FREELANCE | STAGE
+  salary       String?   // rémunération libre : "150 000 FCFA/mois", "Taux à définir"…
+  city         String?
+  remote       Boolean   @default(false)
+  categoryId   String?
+  category     Category? @relation(fields: [categoryId], references: [id])
+  deadline     DateTime?
+  status       String    @default("OPEN") // OPEN | CLOSED
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  applications JobApplication[]
+}
+
+// Candidature à une offre : un candidat = une candidature par offre.
+model JobApplication {
+  id          String   @id @default(cuid())
+  jobOfferId  String
+  jobOffer    JobOffer @relation(fields: [jobOfferId], references: [id], onDelete: Cascade)
+  applicantId String
+  applicant   User     @relation("JobApplicant", fields: [applicantId], references: [id])
+  message     String
+  contact     String? // téléphone WhatsApp, lien CV/portfolio…
+  status      String   @default("PENDING") // PENDING | ACCEPTED | REJECTED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([jobOfferId, applicantId])
 }

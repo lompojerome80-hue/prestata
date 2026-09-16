@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api } from '../api.js';
+import { api, fmtDate, JOB_CONTRACT_LABELS } from '../api.js';
 import { Spinner } from '../components/Ui.jsx';
 
 export default function Home() {
   const [categories, setCategories] = useState(null);
   const [topCats, setTopCats] = useState(null);
+  const [jobs, setJobs] = useState([]);
   const navigate = useNavigate();
 
   const [q, setQ] = useState('');
@@ -16,6 +17,7 @@ export default function Home() {
   useEffect(() => {
     api('/api/categories').then((d) => setCategories(d.categories));
     api('/api/categories/top').then((d) => setTopCats(d.categories));
+    api('/api/jobs').then((d) => setJobs((d.jobs || []).slice(0, 3))).catch(() => {});
   }, []);
 
   const hasLocal = (categories || []).filter((c) => c.kind !== 'DIGITAL');
@@ -117,6 +119,44 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Offres d'emploi */}
+      {jobs.length ? (
+        <section className="section section-alt">
+          <div className="container">
+            <div className="section-head">
+              <h2>💼 Dernières offres d'emploi</h2>
+              <div>
+                <Link to="/emplois" className="btn btn-ghost">Toutes les offres</Link>{' '}
+                <Link to="/emplois/nouvelle" className="btn btn-primary">Publier une offre</Link>
+              </div>
+            </div>
+            <div className="job-grid">
+              {jobs.map((j) => (
+                <Link key={j.id} to={`/emplois/${j.id}`} className="card job-card">
+                  <div className="job-card-head">
+                    <div className="job-card-title">
+                      <h3 className="clamp-1">{j.title}</h3>
+                      <span className="pill">
+                        {JOB_CONTRACT_LABELS[j.contractType] || j.contractType}
+                      </span>
+                    </div>
+                    <div className="muted small job-company">{j.company}</div>
+                  </div>
+                  <p className="job-desc clamp-2">{j.description}</p>
+                  <div className="job-meta">
+                    {j.salary ? <span className="chip">💰 {j.salary}</span> : null}
+                    {j.city ? <span className="chip">📍 {j.city}</span> : null}
+                    {j.deadline && new Date(j.deadline) > new Date() ? (
+                      <span className="chip chip-warn">⏳ avant le {fmtDate(j.deadline)}</span>
+                    ) : null}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {/* Comment ça marche */}
       <section className="section section-alt">

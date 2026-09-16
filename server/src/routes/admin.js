@@ -4,6 +4,7 @@ import { prisma } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/admin.js';
 import { providerSummary, catSummary } from '../utils/serialize.js';
+import { serializeJobOffer } from './jobs.js';
 import { AppError } from '../utils/errors.js';
 import { notify } from '../services/notificationService.js';
 
@@ -73,14 +74,30 @@ router.post('/providers/:id/decision', async (req, res) => {
   });
 });
 
+// GET /api/admin/jobs — toutes les offres d'emploi (auteur, comptage candidatures)
+router.get('/jobs', async (_req, res) => {
+  const offers = await prisma.jobOffer.findMany({
+    include: {
+      author: { select: { id: true, fullName: true, phone: true } },
+      category: true,
+      _count: { select: { applications: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+  });
+  res.json({ jobs: offers.map((o) => ({ ...serializeJobOffer(o), authorPhone: o.author?.phone })) });
+});
+
 // GET /api/admin/stats — catégories les plus demandées + compteurs
 router.get('/stats', async (_req, res) => {
-  const [topCategories, pendingCount, providersCount, usersCount, prestationsCount] = await Promise.all([
+  const [topCategories, pendingCount, providersCount, usersCount, prestationsCount, offersCount, applicationsCount] = await Promise.all([
     prisma.category.findMany({ orderBy: { requestCount: 'desc' }, take: 15 }),
     prisma.providerProfile.count({ where: { status: 'PENDING' } }),
     prisma.providerProfile.count(),
     prisma.user.count(),
     prisma.prestation.count(),
+    prisma.jobOffer.count(),
+    prisma.jobApplication.count(),
   ]);
 
   res.json({
@@ -89,6 +106,8 @@ router.get('/stats', async (_req, res) => {
     providersCount,
     usersCount,
     prestationsCount,
+    offersCount,
+    applicationsCount,
   });
 });
 

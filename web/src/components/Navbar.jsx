@@ -26,6 +26,7 @@ export default function Navbar() {
         <nav className={`nav-menu${open ? ' open' : ''}`}>
           <NavLink to="/" className={cls} onClick={() => setOpen(false)}>Accueil</NavLink>
           <NavLink to="/recherche" className={cls} onClick={() => setOpen(false)}>Trouver un pro</NavLink>
+          <NavLink to="/emplois" className={cls} onClick={() => setOpen(false)}>Emplois</NavLink>
           {token ? (
             <>
               <NavLink to="/tableau-de-bord" className={cls} onClick={() => setOpen(false)}>Tableau de bord</NavLink>

@@ -2,12 +2,30 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Prestata — Trouvez un artisan ou un freelance près de chez vous</title>
-    <meta name="description" content="Plateforme de mise en relation entre clients et prestataires : plomberie, électricité, design, développement, rédaction..." />
+    <meta name="description" content="Plateforme de mise en relation entre clients et prestataires : plomberie, électricité, design, développement, rédaction… Trouvez aussi des offres d'emploi." />
+    <meta name="theme-color" content="#0d9488" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Prestata" />
+    <meta property="og:title" content="Prestata — Artisans, freelances et offres d'emploi" />
+    <meta property="og:description" content="Demandez un devis à un artisan ou un freelance, ou postulez à une offre d'emploi. Paiement en toute confiance." />
+    <link rel="icon" type="image/png" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function () {});
+        });
+      }
+    </script>
   </body>
 </html>

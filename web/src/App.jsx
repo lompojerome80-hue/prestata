@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuth } from './auth.jsx';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
@@ -17,6 +18,38 @@ import ConversationPage from './pages/ConversationPage.jsx';
 import PrestationPage from './pages/PrestationPage.jsx';
 import AccountPage from './pages/AccountPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
+import Jobs from './pages/Jobs.jsx';
+import JobDetail from './pages/JobDetail.jsx';
+import JobForm from './pages/JobForm.jsx';
+import Legal from './pages/Legal.jsx';
+
+const TITLES = {
+  home: 'Prestata — Trouvez un artisan ou un freelance près de chez vous',
+  search: 'Rechercher un prestataire — Prestata',
+  jobs: "Offres d'emploi — Prestata",
+  jobNew: "Publier une offre d'emploi — Prestata",
+  jobEdit: "Modifier une offre d'emploi — Prestata",
+  jobDetail: "Offre d'emploi — Prestata",
+  login: 'Connexion — Prestata',
+  signup: 'Inscription — Prestata',
+  legal: 'Informations légales — Prestata',
+};
+
+function usePageTitle() {
+  const location = useLocation();
+  useEffect(() => {
+    const p = location.pathname;
+    let title = TITLES.home;
+    if (p.startsWith('/recherche')) title = TITLES.search;
+    else if (p.startsWith('/emplois/nouvelle')) title = TITLES.jobNew;
+    else if (p.match(/^\/emplois\/[^/]+\/modifier/)) title = TITLES.jobEdit;
+    else if (p.startsWith('/emplois')) title = p === '/emplois' ? TITLES.jobs : TITLES.jobDetail;
+    else if (p.startsWith('/connexion')) title = TITLES.login;
+    else if (p.startsWith('/inscription')) title = TITLES.signup;
+    else if (p === '/mentions-legales' || p === '/conditions-utilisation' || p === '/confidentialite') title = TITLES.legal;
+    document.title = title;
+  }, [location.pathname]);
+}
 
 function RequireAuth({ children }) {
   const { token, loading } = useAuth();
@@ -36,6 +69,7 @@ function RequireAdmin({ children }) {
 }
 
 export default function App() {
+  usePageTitle();
   return (
     <div className="app">
       <Navbar />
@@ -52,6 +86,13 @@ export default function App() {
               </RequireAuth>
             }
           />
+          <Route path="/emplois" element={<Jobs />} />
+          <Route path="/emplois/nouvelle" element={<RequireAuth><JobForm /></RequireAuth>} />
+          <Route path="/emplois/:id/modifier" element={<RequireAuth><JobForm /></RequireAuth>} />
+          <Route path="/emplois/:id" element={<JobDetail />} />
+          <Route path="/mentions-legales" element={<Legal page="legal" />} />
+          <Route path="/conditions-utilisation" element={<Legal page="terms" />} />
+          <Route path="/confidentialite" element={<Legal page="privacy" />} />
           <Route path="/connexion" element={<Login />} />
           <Route path="/inscription" element={<Signup />} />
           <Route

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api, fmtDate, PRESTATION_STATUS } from '../api.js';
+import { api, fmtDate, PRESTATION_STATUS, JOB_STATUS, JOB_APPLICATION_STATUS } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import { Alert, Empty, Spinner, StatusPill, Avatar } from '../components/Ui.jsx';
 import RequestCard from '../components/RequestCard.jsx';
@@ -12,6 +12,8 @@ export default function Dashboard() {
   const [outgoing, setOutgoing] = useState([]);
   const [myPrestations, setMyPrestations] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [myOffers, setMyOffers] = useState([]);
+  const [myApps, setMyApps] = useState([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
   const [reviewPrompt, setReviewPrompt] = useState(null);
@@ -24,13 +26,17 @@ export default function Dashboard() {
       api('/api/requests/outgoing', { token }),
       api('/api/prestations?role=provider', { token }),
       api('/api/notifications', { token }),
+      api('/api/jobs/mine', { token }).catch(() => ({ jobs: [] })),
+      api('/api/jobs/applications/mine', { token }).catch(() => ({ applications: [] })),
     ])
-      .then(([me, inc, out, pre, notif]) => {
+      .then(([me, inc, out, pre, notif, offers, apps]) => {
         setProvider(me.provider);
         setIncoming(inc.requests || []);
         setOutgoing(out.requests || []);
         setMyPrestations(pre.prestations || []);
         setNotifications(notif.notifications || []);
+        setMyOffers(offers.jobs || []);
+        setMyApps(apps.applications || []);
         setUnread(notif.unread || 0);
       })
       .finally(() => setLoading(false));
@@ -82,6 +88,53 @@ export default function Dashboard() {
           </div>
         </section>
       ) : null}
+
+      {/* Emploi : offres publiées + candidatures */}
+      <section className="section-box">
+        <div className="section-head">
+          <h2>Offres d'emploi</h2>
+          <div className="quick-links">
+            <Link to="/emplois" className="btn btn-ghost small">Explorer</Link>
+            <Link to="/emplois/nouvelle" className="btn btn-primary small">➕ Publier une offre</Link>
+          </div>
+        </div>
+
+        <h3 className="cat-group-title">Mes offres publiées ({myOffers.length})</h3>
+        {myOffers.length ? (
+          <div className="card-stack">
+            {myOffers.map((o) => (
+              <Link key={o.id} to={`/emplois/${o.id}`} className="card row-card">
+                <div>
+                  <strong>{o.title}</strong>
+                  <div className="muted small">
+                    {o.company} • {o.applicantCount} candidature{o.applicantCount > 1 ? 's' : ''}
+                  </div>
+                </div>
+                <StatusPill status={o.status} map={JOB_STATUS} />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="muted">Vous n'avez publié aucune offre. La bourse d'emploi est ouverte à tous.</p>
+        )}
+
+        <h3 className="cat-group-title">Mes candidatures ({myApps.length})</h3>
+        {myApps.length ? (
+          <div className="card-stack">
+            {myApps.map((a) => (
+              <Link key={a.id} to={`/emplois/${a.job?.id}`} className="card row-card">
+                <div>
+                  <strong>{a.job?.title}</strong>
+                  <div className="muted small">{a.job?.company || (a.job?.category ? a.job.category.name : '')} • {fmtDate(a.createdAt)}</div>
+                </div>
+                <StatusPill status={a.status} map={JOB_APPLICATION_STATUS} />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="muted">Aucune candidature envoyée pour le moment.</p>
+        )}
+      </section>
 
       {isProviderView ? (
         <>

@@ -405,3 +405,88 @@ input[type='checkbox'], input[type='radio'] { width: auto; }
   .profile-head { flex-direction: column; }
   .profile-rate-box { text-align: left; align-self: stretch; }
 }
+
+/* ============= EMPLOIS ============= */
+.job-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.job-card { display: flex; flex-direction: column; gap: 10px; }
+.job-card-head { display: flex; flex-direction: column; gap: 2px; }
+.job-card-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.job-card-title h3 { font-size: 1.05rem; margin: 0; }
+.job-company { font-weight: 600; }
+.job-desc { color: #334155; font-size: 0.9rem; }
+.job-desc.multiline { white-space: pre-line; }
+.job-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.job-card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: auto; border-top: 1px dashed var(--line); padding-top: 10px; }
+.btn-link { color: var(--primary-dark); font-weight: 800; font-size: 0.9rem; white-space: nowrap; }
+.pill-solid { background: var(--primary); color: #fff; }
+.pill-info { background: #e0f2fe; color: #0369a1; }
+.filter-check { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.9rem; white-space: nowrap; }
+.filter-check input { width: auto; cursor: pointer; }
+
+.job-hero { background: linear-gradient(150deg, #134e4a 0%, #0d9488 100%); color: #fff; border-radius: 16px; padding: 26px 24px; margin-bottom: 16px; }
+.job-hero h1 { color: #fff; margin: 12px 0 2px; }
+.job-hero .muted { color: #ccfbf1; }
+.job-hero-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.job-hero-badges { display: flex; gap: 6px; }
+
+.app-card { display: flex; flex-direction: column; gap: 10px; }
+.app-card-head { display: flex; align-items: center; gap: 10px; }
+.app-card-info { flex: 1; min-width: 0; }
+.app-card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.app-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ============= LÉGAL ============= */
+.legal-p { color: #334155; }
+.footer-title { color: #fff; }
+
+/* ============= RESPONSIVE AFFINÉ (téléphone / tablette) ============= */
+.conv-page { height: calc(100vh - 60px); height: calc(100dvh - 60px); }
+
+@media (max-width: 900px) {
+  .hero { padding: 48px 12px 40px; }
+  .hero h1 { font-size: clamp(1.6rem, 6vw, 2.2rem); }
+  .section { padding: 30px 12px; }
+  .filter-bar { align-items: stretch; }
+  .filter-bar select, .filter-bar input[type='text'] { flex: 1 1 200px; width: auto; }
+  .footer-inner { gap: 26px; }
+  .prestation-status { flex-wrap: wrap; }
+  .job-hero { padding: 22px 18px; }
+}
+
+@media (max-width: 640px) {
+  .btn { min-height: 44px; }
+  .btn.small { min-height: 38px; }
+  .filter-bar { flex-direction: column; align-items: stretch; }
+  .filter-bar select, .filter-bar input[type='text'] { width: 100%; }
+  .filter-bar .btn { width: 100%; }
+  .filter-check { justify-content: flex-start; }
+  .job-grid { grid-template-columns: 1fr; }
+  .job-card-foot { flex-direction: column; align-items: stretch; }
+  .job-card-foot .btn-link { text-align: right; }
+  .job-hero-top { flex-direction: column; align-items: flex-start; }
+  .hero-bottom-meta { flex-direction: column; align-items: flex-start; }
+  .page { padding: 18px 12px 36px; }
+  .section-box { padding: 16px 14px; }
+  .dash-head { flex-direction: column; align-items: flex-start; }
+  .admin-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .seg { width: 100%; justify-content: center; white-space: nowrap; }
+  .conv-page { height: calc(100vh - 60px); height: calc(100dvh - 60px); }
+  .conv-input { padding: 10px; }
+  .conv-input .btn { padding: 10px 14px; }
+  .msg-bubble { max-width: 88%; }
+  .section-head { align-items: flex-start; }
+  .app-card-foot { flex-direction: column; align-items: stretch; }
+  .app-card-actions { justify-content: stretch; }
+  .app-card-actions .btn { flex: 1; }
+  .footer-inner { flex-direction: column; }
+  .profile-actions { flex-direction: column; }
+  .profile-actions .btn { width: 100%; }
+  .dash-actions { flex-direction: column; }
+  .dash-actions .btn { width: 100%; }
+  .detail-photo { width: 100%; height: auto; }
+  .quote-actions { flex-direction: column; }
+  .quote-actions .btn { width: 100%; }
+  .notif { padding: 12px 0; }
+  .topcat-name { font-size: 0.9rem; }
+  .rate-picker { justify-content: space-between; }
+}

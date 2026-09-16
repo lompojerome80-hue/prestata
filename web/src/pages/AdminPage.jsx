@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api, errMsg, fmtDate, money } from '../api.js';
+import { api, errMsg, fmtDate, money, JOB_STATUS } from '../api.js';
 import { useAuth } from '../auth.jsx';
-import { Alert, Avatar, Empty, Spinner, VerifiedBadge } from '../components/Ui.jsx';
+import { Alert, Avatar, Empty, Spinner, StatusPill, VerifiedBadge } from '../components/Ui.jsx';
 
 export default function AdminPage() {
   const { token } = useAuth();
@@ -10,6 +10,7 @@ export default function AdminPage() {
   const [stats, setStats] = useState(null);
   const [pending, setPending] = useState([]);
   const [allProviders, setAllProviders] = useState([]);
+  const [allJobs, setAllJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionBusy, setActionBusy] = useState(null);
@@ -20,11 +21,13 @@ export default function AdminPage() {
       api('/api/admin/stats', { token }),
       api('/api/admin/providers/pending', { token }),
       api('/api/admin/providers', { token }),
+      api('/api/admin/jobs', { token }),
     ])
-      .then(([s, p, all]) => {
+      .then(([s, p, all, jobs]) => {
         setStats(s);
         setPending(p.providers || []);
         setAllProviders(all.providers || []);
+        setAllJobs(jobs.jobs || []);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -36,6 +39,16 @@ export default function AdminPage() {
     setActionBusy(id);
     try {
       await api(`/api/admin/providers/${id}/decision`, { method: 'POST', token, body: { status, reason: reason || null } });
+      load();
+    } catch (e) { setError(errMsg(e)); }
+    finally { setActionBusy(null); }
+  };
+
+  const deleteJob = async (id) => {
+    if (!window.confirm('Supprimer cette offre d\'emploi et toutes ses candidatures ?')) return;
+    setActionBusy(id);
+    try {
+      await api(`/api/jobs/${id}`, { method: 'DELETE', token });
       load();
     } catch (e) { setError(errMsg(e)); }
     finally { setActionBusy(null); }
@@ -58,6 +71,8 @@ export default function AdminPage() {
             <div className="stat-card"><div className="stat-val">{stats.providersCount}</div><div className="muted small">Prestataires</div></div>
             <div className="stat-card"><div className="stat-val">{stats.usersCount}</div><div className="muted small">Utilisateurs</div></div>
             <div className="stat-card"><div className="stat-val">{stats.prestationsCount}</div><div className="muted small">Prestations</div></div>
+            <div className="stat-card"><div className="stat-val">{stats.offersCount ?? '—'}</div><div className="muted small">Offres d'emploi</div></div>
+            <div className="stat-card"><div className="stat-val">{stats.applicationsCount ?? '—'}</div><div className="muted small">Candidatures</div></div>
           </div>
           {stats.topCategories?.length ? (
             <div className="topcat-list" style={{ marginTop: 12 }}>
@@ -79,6 +94,9 @@ export default function AdminPage() {
         </button>
         <button type="button" className={tab === 'all' ? 'on' : ''} onClick={() => setTab('all')}>
           Tous ({allProviders.length})
+        </button>
+        <button type="button" className={tab === 'jobs' ? 'on' : ''} onClick={() => setTab('jobs')}>
+          Emplois ({allJobs.length})
         </button>
       </div>
 
@@ -141,6 +159,33 @@ export default function AdminPage() {
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {tab === 'jobs' && (
+        <section className="section-box">
+          <h2>Toutes les offres d'emploi</h2>
+          {allJobs.length === 0 ? (
+            <Empty icon="💼" title="Aucune offre" text="Aucune offre d'emploi publiée pour le moment." />
+          ) : (
+            <div className="admin-list">
+              {allJobs.map((o) => (
+                <div key={o.id} className="admin-provider">
+                  <div className="admin-provider-info">
+                    <strong>{o.title} <StatusPill status={o.status} map={JOB_STATUS} /></strong>
+                    <span className="muted small">{o.company} • {o.author?.fullName} ({o.authorPhone}) • {fmtDate(o.createdAt)}</span>
+                    <span className="muted small">{o.applicantCount} candidature{o.applicantCount > 1 ? 's' : ''}{o.city ? ` • 📍 ${o.city}` : ''}</span>
+                  </div>
+                  <div className="admin-actions">
+                    <Link to={`/emplois/${o.id}`} className="btn btn-ghost small">Voir</Link>
+                    <button className="btn btn-ghost small danger" disabled={actionBusy === o.id} onClick={() => deleteJob(o.id)}>
+                      {actionBusy === o.id ? '…' : '🗑 Supprimer'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
     </div>

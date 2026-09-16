@@ -76,6 +76,24 @@ export const PRESTATION_STATUS = {
   REVIEWED: { label: 'Terminée ✓', color: '#059669' },
 };
 
+export const JOB_CONTRACT_LABELS = {
+  CDI: 'CDI',
+  CDD: 'CDD',
+  FREELANCE: 'Freelance',
+  STAGE: 'Stage',
+};
+
+export const JOB_APPLICATION_STATUS = {
+  PENDING: { label: 'En attente', color: '#f59e0b' },
+  ACCEPTED: { label: 'Acceptée', color: '#10b981' },
+  REJECTED: { label: 'Refusée', color: '#ef4444' },
+};
+
+export const JOB_STATUS = {
+  OPEN: { label: 'Active', color: '#10b981' },
+  CLOSED: { label: 'Clôturée', color: '#64748b' },
+};
+
 export function money(amount) {
   return `${Number(amount || 0).toLocaleString('fr-FR')} FCFA`;
 }
