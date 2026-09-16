@@ -288,6 +288,9 @@ if (!ready) {
   // 27. Relire via /api/profiles/me
   r = await api('/api/profiles/me', { token: marieToken });
   log('Relire profil (me)', r.status, `(exp=${r.json?.profile?.experiences?.length}, skills=${r.json?.profile?.skills?.length})`);
+  const pf = r.json?.profile;
+  ok(Array.isArray(pf?.portfolio) && Array.isArray(pf?.reviews) && pf?.provider !== undefined,
+    `portfolio=[${pf?.portfolio?.length}] reviews=[${pf?.reviews?.length}] provider=${pf?.provider?.status ?? 'null'}`);
 
   // 28. Profil public visible pour les visiteurs anonymes
   if (marieUser?.id) {

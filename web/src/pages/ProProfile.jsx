@@ -36,7 +36,7 @@ export default function ProProfile() {
 
   const p = data.profile;
   const isOwner = token && user?.id === p.id;
-  const hasContent = p.bio || p.experiences?.length || p.educations?.length || p.skills?.length || p.openJobs?.length;
+  const hasContent = p.headline || p.bio || p.experiences?.length || p.educations?.length || p.skills?.length || p.openJobs?.length || p.portfolio?.length || p.reviews?.length;
 
   return (
     <div className="pro-page">
@@ -132,6 +132,47 @@ export default function ProProfile() {
                 <div className="chips">
                   {p.skills.map((s) => (
                     <span key={s.id} className={`chip${s.level >= 4 ? ' chip-link' : ''}`}>{s.name}</span>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            {p.portfolio?.length ? (
+              <section className="section-box">
+                <h2>Réalisations</h2>
+                <div className="pro-portfolio">
+                  {p.portfolio.map((it) =>
+                    it.type === 'IMAGE' ? (
+                      <a key={it.id} href={it.url} target="_blank" rel="noreferrer" className="pro-portfolio-img">
+                        <img src={it.url} alt={it.caption || p.fullName} loading="lazy" />
+                        {it.caption ? <span>{it.caption}</span> : null}
+                      </a>
+                    ) : (
+                      <a key={it.id} href={it.url} target="_blank" rel="noreferrer" className="pro-portfolio-link">
+                        🔗 {it.caption || it.url.replace(/^https?:\/\//, '').slice(0, 40)}
+                      </a>
+                    ),
+                  )}
+                </div>
+              </section>
+            ) : null}
+
+            {p.reviews?.length ? (
+              <section className="section-box">
+                <h2>Avis reçus <span className="chip">⭐ {p.provider?.ratingAvg?.toFixed(1)}/5 ({p.provider?.ratingCount})</span></h2>
+                <div className="pro-reviews">
+                  {p.reviews.map((r) => (
+                    <div key={r.id} className="pro-review">
+                      <Avatar url={r.author?.avatarUrl} name={r.author?.fullName} size={40} />
+                      <div className="pro-review-body">
+                        <div className="pro-review-top">
+                          <strong>{r.author?.fullName || 'Utilisateur'}</strong>
+                          <span className="stars">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                        </div>
+                        {r.comment ? <p className="pro-desc">{r.comment}</p> : null}
+                        <div className="muted small">{new Date(r.createdAt).toLocaleDateString('fr-FR')}</div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </section>

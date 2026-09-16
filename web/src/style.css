@@ -494,6 +494,7 @@ input[type='checkbox'], input[type='radio'] { width: auto; }
   .pro-actions { flex-wrap: wrap; }
   .pro-actions .btn { flex: 1; min-width: 45%; }
   .exp-card .grid-2 { grid-template-columns: 1fr; }
+  .pro-portfolio { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ============= PROFIL PROFESSIONNEL (LinkedIn / CV) ============= */
@@ -529,6 +530,28 @@ input[type='checkbox'], input[type='radio'] { width: auto; }
   border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; color: var(--ink);
 }
 .pro-job:hover { border-color: var(--primary); opacity: 1; }
+
+.pro-portfolio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.pro-portfolio-img {
+  position: relative; display: block; overflow: hidden; border-radius: 12px;
+  aspect-ratio: 4 / 3; border: 1px solid var(--line); background: #e2e8f0;
+}
+.pro-portfolio-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.25s ease; }
+.pro-portfolio-img:hover img { transform: scale(1.05); }
+.pro-portfolio-img span {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 10px 8px;
+  background: linear-gradient(to top, rgba(2, 6, 23, 0.75), transparent);
+  color: #fff; font-size: 0.85rem; width: 100%; box-sizing: border-box;
+}
+.pro-portfolio-link {
+  display: block; border: 1px solid var(--line); border-radius: 12px; padding: 14px;
+  color: var(--primary); background: #f0fdfa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pro-reviews { display: flex; flex-direction: column; gap: 14px; }
+.pro-review { display: flex; gap: 12px; }
+.pro-review-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.stars { color: #f59e0b; letter-spacing: 1px; }
+.pro-review-body { flex: 1; min-width: 0; }
 
 .skills-editor { display: flex; gap: 10px; }
 .skills-editor input { flex: 1; }

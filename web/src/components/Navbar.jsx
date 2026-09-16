@@ -45,8 +45,8 @@ export default function Navbar() {
               <button type="button" className="role-toggle" onClick={switchRole} title="Basculer de vue">
                 {roleMode === 'CLIENT' ? '👷 Prestataire' : '🙋 Client'}
               </button>
-              <Link to={`/profil/${user?.id}`} className="avatar-btn" title={user.fullName}>
-                {user.fullName.slice(0, 1).toUpperCase()}
+              <Link to={`/profil/${user?.id}`} className="avatar-btn" title={user?.fullName || ''}>
+                {(user?.fullName || '?').slice(0, 1).toUpperCase()}
               </Link>
               <button type="button" className="logout-btn" onClick={() => { logout(); navigate('/'); }} title="Se déconnecter">
                 ⎋

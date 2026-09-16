@@ -46,6 +46,14 @@ function professionalProfile(u) {
     })),
     skills: (u.skills || []).map((s) => ({ id: s.id, name: s.name, level: s.level })),
     provider: u.providerProfile ? providerSummary(u.providerProfile) : null,
+    portfolio: (u.providerProfile?.portfolio || []).map((it) => ({ id: it.id, type: it.type, url: it.url, caption: it.caption })),
+    reviews: (u.providerProfile?.reviews || []).map((r) => ({
+      id: r.id,
+      rating: r.rating,
+      comment: r.comment,
+      createdAt: r.createdAt,
+      author: r.author ? { id: r.author.id, fullName: r.author.fullName, avatarUrl: r.author.avatarUrl } : null,
+    })),
     openOffers: u._count?.jobOffers ?? 0,
     openJobs: (u.jobOffers || []),
   };
@@ -70,7 +78,12 @@ const loadProfile = (id, { owner = false } = {}) =>
       educations: { orderBy: [{ order: 'asc' }, { createdAt: 'desc' }] },
       skills: { orderBy: { name: 'asc' } },
       providerProfile: {
-        include: { user: true, categories: { include: { category: true } }, portfolio: true },
+        include: {
+          user: true,
+          categories: { include: { category: true } },
+          portfolio: true,
+          reviews: { orderBy: { createdAt: 'desc' }, take: 3, include: { author: { select: { id: true, fullName: true, avatarUrl: true } } } },
+        },
       },
       _count: { select: { jobOffers: true } },
       jobOffers: {
