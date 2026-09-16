@@ -23,7 +23,10 @@ router.post('/signup', async (req, res) => {
     .object({
       fullName: z.string().min(2, 'Nom trop court'),
       phone: z.string().min(8, 'Numéro invalide'),
-      password: z.string().min(6, 'Mot de passe : 6 caractères min'),
+      password: z
+        .string()
+        .min(8, 'Mot de passe : 8 caractères minimum')
+        .regex(/(?=.*[A-Za-z])(?=.*\d).+/, 'Le mot de passe doit contenir au moins une lettre et un chiffre'),
       wantProvider: z.boolean().optional().default(false),
     })
     .parse(req.body);
@@ -46,7 +49,8 @@ router.post('/signup', async (req, res) => {
   res.status(201).json({
     user: publicUser(user),
     token: signToken(user),
-    verification: verif, // sandboxCode présent uniquement en dev
+    // Le code OTP n'est renvoyé qu'en développement (jamais en production).
+    verification: config.isDev ? verif : { sent: verif.sent, expiresAt: verif.expiresAt },
   });
 });
 
@@ -90,7 +94,7 @@ router.put('/me', requireAuth, async (req, res) => {
 // POST /api/auth/request-verify — renvoyer un code OTP
 router.post('/request-verify', requireAuth, async (req, res) => {
   const verif = await sendVerificationOtp(req.user.phone);
-  res.json({ sent: verif.sent, expiresAt: verif.expiresAt, sandboxCode: verif.sandboxCode ?? null });
+  res.json(config.isDev ? { sent: verif.sent, expiresAt: verif.expiresAt, sandboxCode: verif.sandboxCode ?? null } : { sent: verif.sent, expiresAt: verif.expiresAt });
 });
 
 // POST /api/auth/verify — confirmer son téléphone avec le code OTP

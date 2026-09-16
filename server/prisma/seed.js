@@ -29,12 +29,23 @@ const CATEGORIES = [
   { name: 'Formation en ligne', slug: 'formation-en-ligne', kind: 'DIGITAL', icon: 'book-open', sortOrder: 280 },
 ];
 
-async function main() {
-  console.log('⏳ Seed en cours…');
+async function seedCategories() {
+  for (const cat of CATEGORIES) {
+    await prisma.category.upsert({
+      where: { slug: cat.slug },
+      create: cat,
+      update: {},
+    });
+  }
+  const count = await prisma.category.count();
+  console.log(`✅ ${count} catégories prêtes`);
+}
 
+// Comptes de démo — UNIQUEMENT en développement (SEED_DEMO_USERS !== 'false').
+// En production définir SEED_DEMO_USERS=false ; l'admin est créé via ADMIN_PHONE/ADMIN_PASSWORD.
+async function seedDemoUsers() {
   const pwd = await bcrypt.hash('123456', 10);
 
-  // --- Utilisateurs de test ---
   const admin = await prisma.user.upsert({
     where: { phone: '+22991000001' },
     create: { fullName: 'Admin Prestata', phone: '+22991000001', passwordHash: pwd, isAdmin: true, phoneVerified: true },
@@ -59,29 +70,18 @@ async function main() {
     update: {},
   });
 
-  // --- Catégories ---
-  for (const cat of CATEGORIES) {
-    await prisma.category.upsert({
-      where: { slug: cat.slug },
-      create: cat,
-      update: {},
-    });
-  }
   const allCats = await prisma.category.findMany();
-
-  // --- Profils prestataires ---
   const plomberieCat = allCats.find((c) => c.slug === 'plomberie');
   const electriciteCat = allCats.find((c) => c.slug === 'electricite');
   const devWebCat = allCats.find((c) => c.slug === 'dev-web');
   const designCat = allCats.find((c) => c.slug === 'design-graphique');
-  const coutureCat = allCats.find((c) => c.slug === 'couture');
 
   const paulProfile = await prisma.providerProfile.upsert({
     where: { userId: paul.id },
     create: {
       userId: paul.id,
       headline: 'Plombier expérimenté à Cotonou',
-      bio: 'Plus de 10 ans d\'expérience en plomberie résidentielle et commerciale. RAPIDITÉ + FIABILITÉ. Intervention toute la semaine.',
+      bio: "Plus de 10 ans d'expérience en plomberie résidentielle et commerciale.",
       city: 'Cotonou',
       neighborhood: 'Gbegamey',
       remoteOnly: false,
@@ -100,7 +100,7 @@ async function main() {
     create: {
       userId: aisha.id,
       headline: 'Développeuse Web Full Stack',
-      bio: 'Développeuse React/Node.js, je crée des sites web et applications sur mesure. Travail à distance, livraison rapide, code propre et maintenable.',
+      bio: 'Développeuse React/Node.js, sites web et applications sur mesure, travail à distance.',
       remoteOnly: true,
       rate: 25000,
       rateUnit: 'JOUR',
@@ -117,18 +117,17 @@ async function main() {
     create: {
       userId: marie.id,
       headline: 'Couturière & créatrice de mode',
-      bio: 'Couture sur mesure, retouches, création de tenues traditionnelles et modernes. Catalogue riche et original.',
+      bio: 'Couture sur mesure, retouches, création de tenues traditionnelles et modernes.',
       city: 'Parakou',
       neighborhood: 'Centre-ville',
       remoteOnly: false,
       rate: 8000,
       rateUnit: 'SERVICE',
-      status: 'PENDING', // Non validé
+      status: 'PENDING', // Non validé (à valider via l'admin)
     },
     update: {},
   });
 
-  // Lier des catégories
   if (plomberieCat) {
     await prisma.providerCategory.upsert({
       where: { providerId_categoryId: { providerId: paulProfile.id, categoryId: plomberieCat.id } },
@@ -158,25 +157,31 @@ async function main() {
     });
   }
 
-  // Portfolio (créé uniquement s'il n'en existe aucun : seed idempotent pour les re-déploiements)
+  // Portfolio (idempotent)
   const portfolioCount = await prisma.portfolioItem.count();
   if (portfolioCount === 0) {
     await prisma.portfolioItem.createMany({
       data: [
         { providerId: aishaProfile.id, type: 'LINK', url: 'https://github.com/aicha-dev', caption: 'GitHub' },
         { providerId: aishaProfile.id, type: 'LINK', url: 'https://portfolio-aicha.example.com', caption: 'Portfolio' },
-        { providerId: paulProfile.id, type: 'LINK', url: 'https://google.com/maps/place/Cotonou', caption: 'Zone d\'intervention' },
+        { providerId: paulProfile.id, type: 'LINK', url: 'https://google.com/maps/place/Cotonou', caption: "Zone d'intervention" },
       ],
     });
   }
 
+  console.log('✅ Comptes de démo créés (mots de passe : 123456)');
+  console.log(`   Admin : ${admin.phone} —— Client : ${marie.phone} —— Plombier : ${paul.phone} —— Freelance : ${aisha.phone}`);
+}
+
+async function main() {
+  console.log('⏳ Seed en cours…');
+  await seedCategories();
+  if (process.env.SEED_DEMO_USERS !== 'false') {
+    await seedDemoUsers();
+  } else {
+    console.log('ℹ️  Comptes de démo désactivés (SEED_DEMO_USERS=false)');
+  }
   console.log('✅ Seed terminé');
-  console.log('   Comptes créés (tous les mots de passe : 123456) :');
-  console.log(`   Admin       : ${admin.phone} (admin)`);
-  console.log(`   Client      : ${marie.phone} (Marie Akindo — prestataire PENDING)`);
-  console.log(`   Prestataire : ${paul.phone} (Paul Koudjo — plombier Cotonou)`);
-  console.log(`   Freelance   : ${aisha.phone} (Aïcha Dossou — dev web)`);
-  console.log(`   Catégories  : ${CATEGORIES.length}`);
 }
 
 main()

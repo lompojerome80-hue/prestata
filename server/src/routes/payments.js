@@ -10,6 +10,15 @@ import { notify } from '../services/notificationService.js';
 
 const router = Router();
 
+// GET /api/payments/status — paiement en ligne disponible ou non (pour le front)
+router.get('/payments/status', requireAuth, (_req, res) => {
+  res.json({
+    available: config.paymentsAvailable,
+    sandbox: config.paymentsSandbox,
+    providers: config.availableProviders,
+  });
+});
+
 // POST /api/prestations/:id/pay — le client initie le paiement direct
 router.post('/prestations/:id/pay', requireAuth, async (req, res) => {
   const body = z.object({

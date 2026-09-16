@@ -15,7 +15,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="container footer-bottom">
-        <span className="muted">© {new Date().getFullYear()} Prestata — Démo MVP (paiements en mode sandbox)</span>
+        <span className="muted">© {new Date().getFullYear()} Prestata — Plateforme de mise en relation clients et prestataires.</span>
       </div>
     </footer>
   );

@@ -1,8 +1,10 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { rateLimit } from 'express-rate-limit';
 import { config } from './config.js';
 import { errorHandler, AppError } from './utils/errors.js';
 
@@ -24,15 +26,27 @@ import uploadRoutes from './routes/uploads.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
-app.use(cors());
+
+// Render : derrière un proxy → X-Forwarded-For fiable pour le rate limiting.
+app.set('trust proxy', 1);
+
+app.use(helmet());
+app.use(cors({ origin: config.corsOrigin }));
 app.use(express.json({ limit: '10mb' }));
 
-// Fichiers statiques (avatars, portfolio, photos de demande)
+// Fichiers statiques (compat ; les images sont désormais stockées en base).
 app.use('/uploads', express.static(config.uploadsDir));
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', env: config.env, paymentsSandbox: config.paymentsSandbox });
+  res.json({ status: 'ok', env: config.env, paymentsAvailable: config.paymentsAvailable });
 });
+
+// Anti-abus : limite globale + limite stricte sur l'authentification.
+const limiterReply = (_req, res) =>
+  res.status(429).json({ error: { code: 'RATE_LIMITED', message: 'Trop de requêtes. Réessayez dans quelques minutes.' } });
+
+app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, max: 600, standardHeaders: true, legacyHeaders: false, handler: limiterReply }));
+app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false, handler: limiterReply }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -70,5 +84,9 @@ app.use(errorHandler);
 
 app.listen(config.port, () => {
   console.log(`[prestata] API en écoute sur http://localhost:${config.port}`);
-  console.log(`[prestata] Paiement sandbox : ${config.paymentsSandbox ? 'OUI' : 'NON (production)'}`);
+  if (config.paymentsAvailable) {
+    console.log(`[prestata] Paiements en ligne : ${config.availableProviders.join(', ')}`);
+  } else {
+    console.log('[prestata] Paiements en ligne : indisponibles (clés marchand non configurées)');
+  }
 });

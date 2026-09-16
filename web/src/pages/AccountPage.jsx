@@ -104,13 +104,13 @@ export default function AccountPage() {
           <p className="muted">✅ Votre numéro est confirmé.</p>
         ) : (
           <>
-            <p className="muted">Entrez le code reçu par SMS (en démo, le code est affiché ici).</p>
+            <p className="muted">Un code de vérification vous sera envoyé par SMS. Saisissez-le ci-dessous pour confirmer votre numéro.</p>
             <button type="button" className="btn btn-outline" disabled={verifBusy} onClick={requestVerify}>
-              {verifBusy ? 'Envoi…' : 'Recevoir le code OTP'}
+              {verifBusy ? 'Envoi…' : 'Recevoir le code par SMS'}
             </button>
             {sandboxCode ? (
               <Alert tone="info">
-                Code sandbox : <strong>{sandboxCode}</strong>
+                Code (développement uniquement) : <strong>{sandboxCode}</strong>
               </Alert>
             ) : null}
             <div className="form" style={{ marginTop: 8 }}>

@@ -3,15 +3,41 @@ services:
     name: prestata
     env: node
     plan: free
-    buildCommand: npm install --include=dev && npm run db:push:pg && npm run db:generate:pg && npm run db:seed && npm run build
+    buildCommand: npm install --include=dev && npm run db:push:pg && npm run db:generate:pg && npm run db:seed && npm run db:admin && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PAYMENTS_SANDBOX
-        value: "true"
       - key: JWT_SECRET
         generateValue: true
       - key: DATABASE_URL
+        sync: false
+      - key: SEED_DEMO_USERS
+        value: "false"
+      - key: PAYMENTS_SANDBOX
+        value: "false"
+      - key: ADMIN_PHONE
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SMS_API_URL
+        sync: false
+      - key: SMS_API_KEY
+        sync: false
+      - key: OM_API_BASE_URL
+        sync: false
+      - key: OM_CLIENT_ID
+        sync: false
+      - key: OM_CLIENT_SECRET
+        sync: false
+      - key: OM_CALLBACK_URL
+        sync: false
+      - key: MOOV_API_BASE_URL
+        sync: false
+      - key: MOOV_CLIENT_ID
+        sync: false
+      - key: MOOV_CLIENT_SECRET
+        sync: false
+      - key: MOOV_CALLBACK_URL
         sync: false

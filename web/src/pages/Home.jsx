@@ -135,8 +135,8 @@ export default function Home() {
             </div>
             <div className="step">
               <div className="step-num">3</div>
-              <h3>Payez après</h3>
-              <p className="muted">Paiement direct après la prestation, via Orange Money ou Moov Money.</p>
+              <h3>Payez en confiance</h3>
+              <p className="muted">Paiement mobile sécurisé une fois le travail terminé (Orange Money / Moov Money).</p>
             </div>
             <div className="step">
               <div className="step-num">4</div>

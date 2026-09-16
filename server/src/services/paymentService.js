@@ -110,8 +110,15 @@ export const paymentClients = {
  * Renvoie l'objet Payment créé + les instructions (sandboxOtp en dev).
  */
 export async function initiatePrestationPayment({ prestationId, provider, payerPhone, payeePhone }) {
+  if (!config.paymentsAvailable) {
+    throw new AppError(503, 'PAYMENTS_UNAVAILABLE', 'Le paiement en ligne sera bientôt disponible.');
+  }
+
   const client = paymentClients[provider];
   if (!client) throw new AppError(400, 'BAD_PAYMENT_PROVIDER', 'Fournisseur inconnu', { provider });
+  if (!config.availableProviders.includes(provider)) {
+    throw new AppError(501, 'PAYMENT_NOT_CONFIGURED', `Le paiement ${provider} n'est pas encore configuré.`);
+  }
 
   const prestation = await prisma.prestation.findUnique({
     where: { id: prestationId },

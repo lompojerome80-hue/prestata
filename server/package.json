@@ -11,6 +11,7 @@
     "db:push:pg": "prisma db push --schema prisma/schema.postgres.prisma",
     "db:generate:pg": "prisma generate --schema prisma/schema.postgres.prisma",
     "seed": "node prisma/seed.js",
+    "db:admin": "node scripts/create-admin.js",
     "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
@@ -19,8 +20,9 @@
     "cors": "^2.8.5",
     "dotenv": "^17.0.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.0.0",
+    "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^2.0.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {

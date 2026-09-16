@@ -51,9 +51,9 @@ export default function Signup() {
               value={phone} onChange={(e) => setPhone(e.target.value)} required />
           </label>
           <label>
-            Mot de passe (min. 6 caractères)
-            <input type="password" placeholder="••••••"
-              value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+            Mot de passe (8 caractères min., lettres et chiffres)
+            <input type="password" placeholder="••••••••"
+              value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
           </label>
           <button type="submit" className="btn btn-primary full" disabled={busy}>
             {busy ? 'Création…' : 'Créer mon compte'}
@@ -61,9 +61,12 @@ export default function Signup() {
         </form>
       ) : (
         <Alert tone="success">
-          Compte créé ! {result.verification?.sandboxCode ? (
-            <>Code de vérification (sandbox) : <strong>{result.verification.sandboxCode}</strong></>
-          ) : null}
+          Compte créé !
+          {result.verification?.sandboxCode ? (
+            <> Code de vérification (développement) : <strong>{result.verification.sandboxCode}</strong></>
+          ) : (
+            <> Un code de vérification vous a été envoyé par SMS.</>
+          )}
         </Alert>
       )}
 

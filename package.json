@@ -12,6 +12,7 @@
     "db:push:pg": "npm --workspace server run db:push:pg",
     "db:generate:pg": "npm --workspace server run db:generate:pg",
     "db:seed": "npm --workspace server run seed",
+    "db:admin": "npm --workspace server run db:admin",
     "dev:server": "npm --workspace server run dev",
     "dev:web": "npm --workspace web run dev",
     "dev": "concurrently -n API,WEB -c cyan,magenta \"npm run dev:server\" \"npm run dev:web\"",
