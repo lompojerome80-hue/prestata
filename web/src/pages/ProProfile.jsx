@@ -230,8 +230,11 @@ export default function ProProfile() {
             <h2>Expériences professionnelles</h2>
             {p.experiences.map((e) => (
               <div key={e.id} className="cv-entry">
-                <strong>{e.title}</strong> — <span className="cv-sub">{e.company}{e.city ? ` · ${e.city}` : ''}</span>
-                <div className="cv-period">{period(e)}</div>
+                <div className="cv-entry-top">
+                  <strong>{e.title}</strong>
+                  <span className="cv-sub">{e.company}{e.city ? ` · ${e.city}` : ''}</span>
+                  <span className="cv-period">{period(e)}</span>
+                </div>
                 {e.description ? <p>{e.description}</p> : null}
               </div>
             ))}
@@ -243,9 +246,11 @@ export default function ProProfile() {
             <h2>Formation</h2>
             {p.educations.map((ed) => (
               <div key={ed.id} className="cv-entry">
-                <strong>{ed.school}</strong>
-                <div className="cv-sub">{[ed.degree, ed.field].filter(Boolean).join(' · ') || '—'}</div>
-                {yearPeriod(ed) ? <div className="cv-period">{yearPeriod(ed)}</div> : null}
+                <div className="cv-entry-top">
+                  <strong>{ed.school}</strong>
+                  <span className="cv-sub">{[ed.degree, ed.field].filter(Boolean).join(' · ') || '—'}</span>
+                  {yearPeriod(ed) ? <span className="cv-period">{yearPeriod(ed)}</span> : null}
+                </div>
               </div>
             ))}
           </section>
@@ -254,7 +259,9 @@ export default function ProProfile() {
         {p.skills?.length ? (
           <section>
             <h2>Compétences</h2>
-            <p>{p.skills.map((s) => s.name).join(' · ')}</p>
+            <ul className="cv-skills">
+              {p.skills.map((s) => <li key={s.id}>{s.name}</li>)}
+            </ul>
           </section>
         ) : null}
       </div>
