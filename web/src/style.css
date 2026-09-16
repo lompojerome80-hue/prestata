@@ -16,6 +16,7 @@
 * { box-sizing: border-box; }
 
 html, body, #root { margin: 0; padding: 0; }
+html, body { overflow-x: hidden; overflow-x: clip; }
 
 body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;

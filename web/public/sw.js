@@ -1,5 +1,5 @@
 /* Prestata — Service worker : cache dynamique + App Shell hors ligne. */
-const CACHE = 'prestata-v1';
+const CACHE = 'prestata-v2';
 const CORE = ['/', '/index.html'];
 
 self.addEventListener('install', (event) => {
