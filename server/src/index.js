@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { rateLimit } from 'express-rate-limit';
 import { config } from './config.js';
 import { errorHandler, AppError } from './utils/errors.js';
+import { prisma } from './db.js';
 
 import authRoutes from './routes/auth.js';
 import categoryRoutes from './routes/categories.js';
@@ -24,6 +25,7 @@ import profileRoutes from './routes/profiles.js';
 import adminRoutes from './routes/admin.js';
 import webhookRoutes from './routes/webhooks.js';
 import uploadRoutes from './routes/uploads.js';
+import { seoMeta, applySeo, renderRobots, renderSitemap } from './seo.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -75,10 +77,33 @@ app.use('/api', (_req, _res, next) => next(new AppError(404, 'NOT_FOUND', 'Route
 if (config.env === 'production') {
   const webDist = path.resolve(__dirname, '..', '..', 'web', 'dist');
   if (fs.existsSync(webDist)) {
+    // SEO technique : robots + sitemap (avant le fallback SPA)
+    app.get('/robots.txt', (_req, res) => res.type('text/plain').send(renderRobots()));
+    app.get('/sitemap.xml', async (_req, res) => {
+      try {
+        const xml = await renderSitemap(prisma);
+        res.type('application/xml').send(xml);
+      } catch {
+        res.status(500).send('Erreur');
+      }
+    });
+
     app.use(express.static(webDist));
-    app.use((req, res, next) => {
+
+    // Meta par page (title/description/og) pour le partage façon LinkedIn
+    let indexHtml = null;
+    app.use(async (req, res, next) => {
       if (req.method !== 'GET' || req.path.startsWith('/api/')) return next();
-      res.sendFile(path.join(webDist, 'index.html'));
+      try {
+        if (!indexHtml) indexHtml = fs.readFileSync(path.join(webDist, 'index.html'), 'utf8');
+        let html = indexHtml;
+        let meta = null;
+        try { meta = await seoMeta(req.path, prisma); } catch { meta = null; }
+        if (meta) html = applySeo(html, meta);
+        res.type('html').send(html);
+      } catch {
+        next();
+      }
     });
   }
 }
